@@ -51,11 +51,13 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 
     //一屏最多可以绘制多少个点
     private var maxValuePoint = 7
-//    private var leftSubIndex = 0
-//    private var rightSubIndex = 1
+    private var leftSubIndex = 0//包含这个索引
+    private var rightSubIndex = 1//不包含这个索引
 
     //实际需要绘制的点
-//    private var enableDrawData = mutableListOf<LindData>()
+    private var enableDrawData = mutableListOf<LineView.LindData>()
+    private var originalStartX = 0f
+    private var originalEndX = 0f
 
     //y轴顶部最大有效值位置
     private val yValueMaxLimitSpace = 30
@@ -107,18 +109,74 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     private var yTextPaint = Paint()
     private var testPaint = Paint()
     private var linePaint = Paint()
+    private var pointValuePaint = Paint()
     private var linePointPaint = Paint()
     private var path = Path()
     private var clipRectF = RectF()
 
     //往左边加
-    fun insertToLeft(data: MutableList<LineView.LindData>) {
+    private fun insertToLeft() {
+        if (enableDrawData[0].xPos - originalStartX >= perDataDistance * maxValuePoint) {
+            //加入一屏数据
+            if (data.isNotEmpty()) {
+                if ((leftSubIndex - leftSubIndex * 3) >= 0) {
+                    addEnableDataToEnableData(leftSubIndex - leftSubIndex * 3)
+                } else {
+                    addEnableDataToEnableData(0)
+                }
+            }
+
+        }
+    }
+
+    //往右边加 避免新建对象
+    private fun insertToRight() {
+        if (originalEndX - enableDrawData[enableDrawData.lastIndex].xPos >= perDataDistance * maxValuePoint) {
+            //加入一屏数据
+            if (data.isNotEmpty()) {
+                if (data.size >= maxValuePoint + rightSubIndex) {
+                    addDataToEnableData(maxValuePoint + rightSubIndex)
+                } else {
+                    addDataToEnableData(data.size)
+                }
+            }
+
+        }
+    }
+
+    private fun addEnableDataToEnableData(startIndex: Int) {
+        for (index in leftSubIndex - 1 downTo startIndex) {
+            val newItem = data[index]
+            newItem.xPos =
+                enableDrawData[0].xPos - perDataDistance
+            enableDrawData.add(0, newItem)
+        }
+        //超过部分移除
+        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 3)) {
+            enableDrawData.removeAt(enableDrawData.lastIndex)
+        }
+        originalEndX = enableDrawData[enableDrawData.lastIndex].xPos
+        originalStartX = enableDrawData[0].xPos
+        leftSubIndex = startIndex
+        rightSubIndex = startIndex + enableDrawData.size
 
     }
 
-    //往右边加
-    fun insertToRight(data: MutableList<LineView.LindData>) {
-
+    private fun addDataToEnableData(endIndex: Int) {
+        for (index in rightSubIndex until endIndex) {
+            val newItem = data[index]
+            newItem.xPos =
+                enableDrawData[enableDrawData.lastIndex].xPos + perDataDistance
+            enableDrawData.add(newItem)
+        }
+        //超过部分移除
+        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 3)) {
+            enableDrawData.removeAt(0)
+        }
+        originalEndX = enableDrawData[enableDrawData.lastIndex].xPos
+        originalStartX = enableDrawData[0].xPos
+        rightSubIndex = endIndex
+        leftSubIndex = rightSubIndex - enableDrawData.size
     }
 
     /**
@@ -131,6 +189,13 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             style = Paint.Style.STROKE
             strokeWidth = lineWidth.toFloat()
         }
+        pointValuePaint.apply {
+            isAntiAlias = true
+            color = Color.BLACK
+            style = Paint.Style.FILL
+            textSize = 36f
+            textAlign = Paint.Align.CENTER
+        }
         linePointPaint.apply {
             isAntiAlias = true
             color = linePointColor
@@ -139,6 +204,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         }
         Log.e("sssssssssss", canvas.height.toString())
         canvas.save()
+//        第一次裁剪
         clipRectF.set(
             yValueRectTextWidth.toFloat() - pointWidth.shr(1),
             yValueMaxLimitSpace.toFloat(),
@@ -156,13 +222,13 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             //初始化状态
             perDataDistance = clipRectF.width() / maxValuePoint
             //填充可绘制数据
-//            if (data.size <= maxValuePoint * 3) {
-//                enableDrawData.addAll(data)
-//            } else {
-//                leftSubIndex = 0
-//                rightSubIndex = maxValuePoint * 3
-//                enableDrawData.addAll(data.subList(leftSubIndex, rightSubIndex))
-//            }
+            if (data.size <= maxValuePoint * 3) {
+                enableDrawData.addAll(data)
+            } else {
+                leftSubIndex = 0
+                rightSubIndex = maxValuePoint * 3
+                enableDrawData.addAll(data.subList(leftSubIndex, rightSubIndex))
+            }
             var xPos = clipRectF.left + pointWidth
             for (item in data) {
                 item.xPos = xPos
@@ -171,42 +237,74 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 //                item.yPos = clipRectF.top
                 xPos += perDataDistance
             }
+            originalStartX = if (enableDrawData.isNotEmpty()) {
+                enableDrawData[0].xPos
+            } else {
+                0f
+            }
+            originalEndX = if (enableDrawData.isNotEmpty()) {
+                enableDrawData[enableDrawData.lastIndex].xPos
+            } else {
+                0f
+            }
         }
-        //处理拖动
-        //滑动了多少个点
-//        val scrollPosNumber = ceil(abs(scrollXDistance) / perDataDistance)
-//        Log.e("scrollPosNumber","${scrollPosNumber}")
 
         if (scrollXDistance != 0f) {
             //右滑动
             if (scrollXDistance > 0) {
-//                val willChangeIndex = leftSubIndex - scrollPosNumber
-            } else {
-                //左滑动
-//                val willChangeIndex = rightSubIndex + scrollPosNumber
-//                if (data.size >= willChangeIndex) {
-//                    fillRightPos(scrollPosNumber.toInt(), willChangeIndex.toInt())
-//                } else {
-//                    //一次滚动数量超过极限
-//                    val default = rightSubIndex + maxValuePoint * 3
-//                    if (data.size >= default) {
-//                        fillRightPos(maxValuePoint * 3, default)
-//                    } else {
-//                        val available = data.size - rightSubIndex
-//                        if (available > 0) {
-//                            fillRightPos(available, data.size)
+                for (item in enableDrawData) {
+                    item.xPos = item.xPos + abs(scrollXDistance)
+                }
+                if (enableDrawData.isNotEmpty()) {
+                    if (enableDrawData[0].xPos - originalStartX >= 0) {
+                        //往右滑动 滑动得距离达到了限度，调整可绘制集合
+                        insertToLeft()
+                    }
+//                    else {
+//                        //往右滑动
+//                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
+//                            insertToLeft()
 //                        }
 //                    }
-//                }
-                for (item in data) {
+
+                }
+            } else {
+                //左滑动
+                for (item in enableDrawData) {
                     item.xPos = item.xPos - abs(scrollXDistance)
                 }
+                if (enableDrawData.isNotEmpty()) {
+                    if (originalEndX - enableDrawData[enableDrawData.lastIndex].xPos >= 0) {
+                        //往左滑动 滑动得距离达到了限度，调整可绘制集合
+                        insertToRight()
+                    } else {
+                        //往右滑动
+                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
+                            insertToLeft()
+                        }
+                    }
+
+                }
+
             }
         }
 
         Log.e("sssssssssss", canvas.height.toString())
         //开始画点
         drawAllPoint(canvas)
+        //画点上的数据
+//        canvas.restore()
+        drawPointValue(canvas)
+
+
+    }
+
+    private fun drawPointValue(canvas: Canvas) {
+        val font = pointValuePaint.fontMetrics
+        val dy = (font.bottom - font.top) / 2 - font.bottom
+        for (item in enableDrawData) {
+            canvas.drawText(item.time.toString(), item.xPos, item.yPos - dy - 20, pointValuePaint)
+        }
     }
 
     /**
@@ -257,7 +355,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 //        if (enableDrawData.isNotEmpty()) {
 //            path.moveTo(enableDrawData[0].xPos, enableDrawData[0].yPos)
 //        }
-        for (item in data) {
+        for (item in enableDrawData) {
             canvas.drawCircle(item.xPos, item.yPos, pointWidth.toFloat(), linePointPaint)
             path.lineTo(item.xPos, item.yPos)
         }
