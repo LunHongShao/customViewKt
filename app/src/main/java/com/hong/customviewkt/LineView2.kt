@@ -116,11 +116,11 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 
     //往左边加
     private fun insertToLeft() {
-        if (enableDrawData[0].xPos - originalStartX >= perDataDistance * maxValuePoint) {
+        if (enableDrawData[enableDrawData.lastIndex].xPos - originalEndX>= perDataDistance * maxValuePoint) {
             //加入一屏数据
             if (data.isNotEmpty()) {
-                if ((leftSubIndex - leftSubIndex * 3) >= 0) {
-                    addEnableDataToEnableData(leftSubIndex - leftSubIndex * 3)
+                if ((leftSubIndex - maxValuePoint ) >= 0) {
+                    addEnableDataToEnableData(leftSubIndex - maxValuePoint)
                 } else {
                     addEnableDataToEnableData(0)
                 }
@@ -256,7 +256,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
                     item.xPos = item.xPos + abs(scrollXDistance)
                 }
                 if (enableDrawData.isNotEmpty()) {
-                    if (enableDrawData[0].xPos - originalStartX >= 0) {
+                    if (enableDrawData[enableDrawData.lastIndex].xPos - originalEndX >= 0) {
                         //往右滑动 滑动得距离达到了限度，调整可绘制集合
                         insertToLeft()
                     }
