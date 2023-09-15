@@ -175,7 +175,7 @@ class LineView : View, GestureDetector.OnGestureListener {
         //处理拖动
         //滑动了多少个点
         val scrollPosNumber = ceil(abs(scrollXDistance) / perDataDistance)
-        Log.e("scrollPosNumber","${scrollPosNumber}")
+        Log.e("scrollPosNumber", "${scrollPosNumber}")
 
         if (scrollXDistance != 0f && scrollPosNumber > 0) {
             //右滑动
@@ -367,7 +367,8 @@ class LineView : View, GestureDetector.OnGestureListener {
         val time: Long,
         val value: Float,
         var xPos: Float = 0f,
-        var yPos: Float = 0f
+        var yPos: Float = 0f,
+        var id: Int
     )
 
     override fun onDown(p0: MotionEvent?): Boolean {

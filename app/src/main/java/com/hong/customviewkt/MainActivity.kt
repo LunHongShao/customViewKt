@@ -22,19 +22,19 @@ class MainActivity : AppCompatActivity() {
 //        for (i in 0 until 11){
 //
 //        }
-        data.add(LineView.LindData(0, 100f))
-        data.add(LineView.LindData(1, 80f))
-        data.add(LineView.LindData(2, 100f))
-        data.add(LineView.LindData(3, 80f))
-        data.add(LineView.LindData(4, 10f))
-        data.add(LineView.LindData(5, 20f))
-        data.add(LineView.LindData(6, 10f))
-        data.add(LineView.LindData(7, 90f))
-        data.add(LineView.LindData(8, 75f))
-        data.add(LineView.LindData(9, 62f))
-        data.add(LineView.LindData(1692784194000, 77f))
-        for (i in 10 until 100){
-            data.add(LineView.LindData(i.toLong(), 77f))
+        data.add(LineView.LindData(0, 77f,id=0))
+        data.add(LineView.LindData(1, 77f,id=1))
+        data.add(LineView.LindData(2, 77f,id=2))
+        data.add(LineView.LindData(3, 77f,id=3))
+        data.add(LineView.LindData(4, 10f,id=4))
+        data.add(LineView.LindData(5, 20f,id=5))
+        data.add(LineView.LindData(6, 10f,id=6))
+        data.add(LineView.LindData(7, 90f,id=7))
+        data.add(LineView.LindData(8, 75f,id=8))
+        data.add(LineView.LindData(9, 62f,id=9))
+        data.add(LineView.LindData(1692784194000, 77f,id=10))
+        for (i in 11 until 100){
+            data.add(LineView.LindData(i.toLong(), 77f,id=i))
         }
         lineView.data = data
         test()

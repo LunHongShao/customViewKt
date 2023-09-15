@@ -151,6 +151,10 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             newItem.xPos =
                 enableDrawData[0].xPos - perDataDistance
             enableDrawData.add(0, newItem)
+            if (newItem.id == 0) {
+                Log.e("qqqqqq", newItem.xPos.toString())
+            }
+
         }
         //超过部分移除
         for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 5)) {
@@ -253,6 +257,14 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         if (scrollXDistance != 0f) {
             //右滑动
             if (scrollXDistance > 0) {
+                if (enableDrawData.isNotEmpty()) {
+                    if (enableDrawData[0].id == data[0].id) {
+                        //是第一条
+                        if (enableDrawData[0].xPos + abs(scrollXDistance) > getFirstPointX()) {
+                            scrollXDistance = getFirstPointX() - enableDrawData[0].xPos
+                        }
+                    }
+                }
                 for (item in enableDrawData) {
                     item.xPos = item.xPos + abs(scrollXDistance)
                 }
@@ -300,6 +312,8 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 
     }
 
+    private fun getFirstPointX(): Float = clipRectF.left + pointWidth
+
     private fun drawPointValue(canvas: Canvas) {
         val font = pointValuePaint.fontMetrics
         val dy = (font.bottom - font.top) / 2 - font.bottom
@@ -308,43 +322,6 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         }
     }
 
-    /**
-     * 往右边填充数据
-     *
-     * @param fillNumber 填充数量
-     * @param willChangeIndex 截取索引
-     */
-//    private fun fillRightPos(fillNumber: Int, willChangeIndex: Int) {
-//        if (fillNumber <= 0) {
-//            return
-//        }
-//        if (willChangeIndex <= rightSubIndex) {
-//            return
-//        }
-//        if (rightSubIndex > data.lastIndex) {
-//            return
-//        }
-//        if (willChangeIndex > data.size) {
-//            return
-//        }
-//        for (i in 0 until fillNumber) {
-//            enableDrawData.removeAt(0)
-//        }
-//        for (item in enableDrawData) {
-//            item.xPos = item.xPos - abs(scrollXDistance)
-//        }
-//        val newList = data.subList(rightSubIndex, willChangeIndex)
-//        var xPos = enableDrawData[enableDrawData.lastIndex].xPos + perDataDistance
-//        for (item in newList) {
-//            item.xPos = xPos
-//            item.yPos =
-//                clipRectF.height() - item.value * yRate + clipRectF.top + xValueRectTextHeight
-//            xPos += perDataDistance
-//        }
-//
-//        enableDrawData.addAll(newList)
-//        rightSubIndex = willChangeIndex
-//    }
 
     /**
      * 画点和线
