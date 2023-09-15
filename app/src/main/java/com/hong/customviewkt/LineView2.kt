@@ -73,6 +73,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     //y轴有多少个数字
     private val YValueSize = 8
     private var yValues = mutableListOf<Int>()
+    private var totalScrollX = 0f
 
 
     //y轴最大值
@@ -116,10 +117,10 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 
     //往左边加
     private fun insertToLeft() {
-        if (enableDrawData[enableDrawData.lastIndex].xPos - originalEndX>= perDataDistance * maxValuePoint) {
+        if (enableDrawData[enableDrawData.lastIndex].xPos - originalEndX >= perDataDistance * maxValuePoint) {
             //加入一屏数据
             if (data.isNotEmpty()) {
-                if ((leftSubIndex - maxValuePoint ) >= 0) {
+                if ((leftSubIndex - maxValuePoint) >= 0) {
                     addEnableDataToEnableData(leftSubIndex - maxValuePoint)
                 } else {
                     addEnableDataToEnableData(0)
@@ -152,7 +153,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             enableDrawData.add(0, newItem)
         }
         //超过部分移除
-        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 3)) {
+        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 5)) {
             enableDrawData.removeAt(enableDrawData.lastIndex)
         }
         originalEndX = enableDrawData[enableDrawData.lastIndex].xPos
@@ -170,7 +171,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             enableDrawData.add(newItem)
         }
         //超过部分移除
-        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 3)) {
+        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 5)) {
             enableDrawData.removeAt(0)
         }
         originalEndX = enableDrawData[enableDrawData.lastIndex].xPos
@@ -259,13 +260,13 @@ class LineView2 : View, GestureDetector.OnGestureListener {
                     if (enableDrawData[enableDrawData.lastIndex].xPos - originalEndX >= 0) {
                         //往右滑动 滑动得距离达到了限度，调整可绘制集合
                         insertToLeft()
+                    } else {
+                        Log.e("ssssssssss", "else分支")
+                        //往左滑动
+                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
+                            insertToRight()
+                        }
                     }
-//                    else {
-//                        //往右滑动
-//                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
-//                            insertToLeft()
-//                        }
-//                    }
 
                 }
             } else {
@@ -502,6 +503,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         distanceX: Float,
         distanceY: Float
     ): Boolean {
+        totalScrollX += distanceX
         scrollXDistance = (-distanceX)
         scroller!!.startScroll(scrollX, 0, distanceX.toInt(), 0)
         invalidate()
