@@ -1,7 +1,11 @@
 package com.hong.customviewkt
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
@@ -14,6 +18,9 @@ import kotlin.math.ceil
 class LineView2 : View, GestureDetector.OnGestureListener {
     private var gesture: GestureDetector? = null
     private var scroller: Scroller? = null
+
+    //装需要被移除得索引
+    private var needRemoveIndex = mutableListOf<LineView.LindData>()
 
     constructor(ctx: Context) : this(ctx, null, 0)
     constructor(ctx: Context, attrs: AttributeSet?) : this(ctx, attrs, 0)
@@ -51,8 +58,11 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 
     //一屏最多可以绘制多少个点
     private var maxValuePoint = 7
+    private var pointScale = 6
     private var leftSubIndex = 0//包含这个索引
     private var rightSubIndex = 1//不包含这个索引
+    private var minXPos = 0f//可视区域内最小得x值
+    private var maxXPos = 0f//可视区域内最大得x值
 
     //实际需要绘制的点
     private var enableDrawData = mutableListOf<LineView.LindData>()
@@ -157,14 +167,45 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 
         }
         //超过部分移除
-        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 5)) {
-            enableDrawData.removeAt(enableDrawData.lastIndex)
-        }
+        removeInvalidPoint()
+//        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 5)) {
+//            enableDrawData.removeAt(enableDrawData.lastIndex)
+//        }
         originalEndX = enableDrawData[enableDrawData.lastIndex].xPos
         originalStartX = enableDrawData[0].xPos
         leftSubIndex = startIndex
         rightSubIndex = startIndex + enableDrawData.size
 
+    }
+
+    /**
+     * 移除enableDrawData中得无效数据
+     *
+     */
+    private fun removeInvalidPoint() {
+        needRemoveIndex.clear()
+        //先检查左边
+        for (i in 0 until enableDrawData.lastIndex) {
+            val item = enableDrawData[i]
+            if (item.xPos < minXPos) {
+                needRemoveIndex.add(item)
+            } else {
+                break
+            }
+        }
+        //再检查右边
+        for (i in enableDrawData.lastIndex downTo 0) {
+            val item = enableDrawData[i]
+            if (item.xPos > maxXPos) {
+                needRemoveIndex.add(item)
+            } else {
+                break
+            }
+        }
+        //开始移除
+        for (item in needRemoveIndex) {
+            enableDrawData.remove(item)
+        }
     }
 
     private fun addDataToEnableData(endIndex: Int) {
@@ -175,9 +216,10 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             enableDrawData.add(newItem)
         }
         //超过部分移除
-        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 5)) {
-            enableDrawData.removeAt(0)
-        }
+        removeInvalidPoint()
+//        for (removeIndex in 0 until (enableDrawData.size - maxValuePoint * 5)) {
+//            enableDrawData.removeAt(0)
+//        }
         originalEndX = enableDrawData[enableDrawData.lastIndex].xPos
         originalStartX = enableDrawData[0].xPos
         rightSubIndex = endIndex
@@ -207,6 +249,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             style = Paint.Style.FILL
             strokeWidth = linePointSize.toFloat()
         }
+        Log.e("开始绘制", "${scrollXDistance.toString()}--${totalScrollX}---${scrollX}")
         Log.e("sssssssssss", canvas.height.toString())
         canvas.save()
 //        第一次裁剪
@@ -227,11 +270,11 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             //初始化状态
             perDataDistance = clipRectF.width() / maxValuePoint
             //填充可绘制数据
-            if (data.size <= maxValuePoint * 3) {
+            if (data.size <= maxValuePoint * pointScale) {
                 enableDrawData.addAll(data)
             } else {
                 leftSubIndex = 0
-                rightSubIndex = maxValuePoint * 3
+                rightSubIndex = maxValuePoint * pointScale
                 enableDrawData.addAll(data.subList(leftSubIndex, rightSubIndex))
             }
             var xPos = clipRectF.left + pointWidth
@@ -241,6 +284,16 @@ class LineView2 : View, GestureDetector.OnGestureListener {
                     clipRectF.height() - item.value * yRate + clipRectF.top + yValueMaxLimitSpace
 //                item.yPos = clipRectF.top
                 xPos += perDataDistance
+            }
+            minXPos = if (data.isNotEmpty()) {
+                data[0].xPos - (perDataDistance * maxValuePoint * pointScale)
+            } else {
+                0f
+            }
+            maxXPos = if (data.size > maxValuePoint) {
+                data[maxValuePoint - 1].xPos + (perDataDistance * maxValuePoint * pointScale)
+            } else {
+                0f
             }
             originalStartX = if (enableDrawData.isNotEmpty()) {
                 enableDrawData[0].xPos
@@ -482,7 +535,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     ): Boolean {
         totalScrollX += distanceX
         scrollXDistance = (-distanceX)
-        scroller!!.startScroll(scrollX, 0, distanceX.toInt(), 0)
+//        scroller!!.startScroll(scrollX, 0, distanceX.toInt(), 0)
         invalidate()
         Log.e("onScroll", "${scrollXDistance}")
         Log.e("distanceX", "${-distanceX}")
@@ -493,16 +546,16 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     }
 
     override fun onFling(p0: MotionEvent, p1: MotionEvent, p2: Float, p3: Float): Boolean {
-        scroller!!.fling(
-            p1.x.toInt(),
-            p1.y.toInt(),
-            p2.toInt(),
-            p3.toInt(),
-            -Integer.MAX_VALUE,
-            Integer.MAX_VALUE,
-            -Integer.MAX_VALUE,
-            Integer.MAX_VALUE
-        )
+//        scroller!!.fling(
+//            p1.x.toInt(),
+//            p1.y.toInt(),
+//            p2.toInt(),
+//            p3.toInt(),
+//            -Integer.MAX_VALUE,
+//            Integer.MAX_VALUE,
+//            -Integer.MAX_VALUE,
+//            Integer.MAX_VALUE
+//        )
         Log.e("ssssssssssss", "onFling--${p1.x - p0.x}--velocityX=${p2}---velocityy=${p3}")
         return true
     }

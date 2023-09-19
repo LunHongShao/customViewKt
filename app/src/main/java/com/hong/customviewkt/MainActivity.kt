@@ -11,6 +11,14 @@ fun main() {
     val newList=data.subList(0,10)
     println(data)
     println(newList)
+    val inter=data.iterator()
+    while (inter.hasNext()) {
+        if (inter.next().toInt()<=10){
+            inter.remove()
+        }
+    }
+    println(data)
+
 }
 
 class MainActivity : AppCompatActivity() {
@@ -33,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         data.add(LineView.LindData(8, 75f,id=8))
         data.add(LineView.LindData(9, 62f,id=9))
         data.add(LineView.LindData(1692784194000, 77f,id=10))
-        for (i in 11 until 100){
+        for (i in 11 until 10000){
             data.add(LineView.LindData(i.toLong(), 77f,id=i))
         }
         lineView.data = data
