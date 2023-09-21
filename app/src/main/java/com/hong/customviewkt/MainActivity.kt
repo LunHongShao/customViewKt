@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        TestScrollActivity.start(this)
         val lineView = findViewById<LineView2>(R.id.lineView)
         val data = mutableListOf<LineView.LindData>()
 //        for (i in 0 until 11){
