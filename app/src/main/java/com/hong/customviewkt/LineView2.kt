@@ -58,7 +58,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 
     //一屏最多可以绘制多少个点
     private var maxValuePoint = 7
-    private var pointScale = 6
+    private var pointScale = 140
     private var leftSubIndex = 0//包含这个索引
     private var rightSubIndex = 1//不包含这个索引
     private var minXPos = 0f//可视区域内最小得x值
@@ -143,6 +143,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     //往右边加 避免新建对象
     private fun insertToRight() {
         if (originalEndX - enableDrawData[enableDrawData.lastIndex].xPos >= perDataDistance * maxValuePoint) {
+            Log.e("ssssssssss", "开始往右边加数据")
             //加入一屏数据
             if (data.isNotEmpty()) {
                 if (data.size >= maxValuePoint + rightSubIndex) {
@@ -310,47 +311,49 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         if (scrollXDistance != 0f) {
             //右滑动
             if (scrollXDistance > 0) {
-                if (enableDrawData.isNotEmpty()) {
-                    if (enableDrawData[0].id == data[0].id) {
-                        //是第一条
-                        if (enableDrawData[0].xPos + abs(scrollXDistance) > getFirstPointX()) {
-                            scrollXDistance = getFirstPointX() - enableDrawData[0].xPos
-                        }
-                    }
-                }
+//                if (enableDrawData.isNotEmpty()) {
+//                    if (enableDrawData[0].id == data[0].id) {
+//                        //是第一条
+//                        if (enableDrawData[0].xPos + abs(scrollXDistance) > getFirstPointX()) {
+//                            scrollXDistance = getFirstPointX() - enableDrawData[0].xPos
+//                        }
+//                    }
+//                }
                 for (item in enableDrawData) {
                     item.xPos = item.xPos + abs(scrollXDistance)
                 }
-                if (enableDrawData.isNotEmpty()) {
-                    if (enableDrawData[enableDrawData.lastIndex].xPos - originalEndX >= 0) {
-                        //往右滑动 滑动得距离达到了限度，调整可绘制集合
-                        insertToLeft()
-                    } else {
-                        Log.e("ssssssssss", "else分支")
-                        //往左滑动
-                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
-                            insertToRight()
-                        }
-                    }
-
-                }
+//                if (enableDrawData.isNotEmpty()) {
+//                    if (enableDrawData[enableDrawData.lastIndex].xPos - originalEndX >= 0) {
+//                        //往右滑动 滑动得距离达到了限度，调整可绘制集合
+//                        insertToLeft()
+//                    } else {
+//                        Log.e("ssssssssss", "else分支")
+//                        //往左滑动
+//                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
+//                            insertToRight()
+//                        }
+//                    }
+//
+//                }
             } else {
                 //左滑动
                 for (item in enableDrawData) {
                     item.xPos = item.xPos - abs(scrollXDistance)
                 }
-                if (enableDrawData.isNotEmpty()) {
-                    if (originalEndX - enableDrawData[enableDrawData.lastIndex].xPos >= 0) {
-                        //往左滑动 滑动得距离达到了限度，调整可绘制集合
-                        insertToRight()
-                    } else {
-                        //往右滑动
-                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
-                            insertToLeft()
-                        }
-                    }
-
-                }
+//                if (enableDrawData.isNotEmpty()) {
+//                    if (originalEndX - enableDrawData[enableDrawData.lastIndex].xPos >= 0) {
+//                        //往左滑动 滑动得距离达到了限度，调整可绘制集合
+//                        insertToRight()
+//                        Log.e("ssssssssss", "一直往左滑动")
+//                    } else {
+//                        //往右滑动
+//                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
+//                            insertToLeft()
+//                            Log.e("ssssssssss", "突然往右滑动")
+//                        }
+//                    }
+//
+//                }
 
             }
         }
@@ -546,27 +549,40 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     }
 
     override fun onFling(p0: MotionEvent, p1: MotionEvent, p2: Float, p3: Float): Boolean {
-//        scroller!!.fling(
-//            p1.x.toInt(),
-//            p1.y.toInt(),
-//            p2.toInt(),
-//            p3.toInt(),
-//            -Integer.MAX_VALUE,
-//            Integer.MAX_VALUE,
-//            -Integer.MAX_VALUE,
-//            Integer.MAX_VALUE
-//        )
-        Log.e("ssssssssssss", "onFling--${p1.x - p0.x}--velocityX=${p2}---velocityy=${p3}")
+        scroller!!.fling(
+            p1.x.toInt(),
+            p1.y.toInt(),
+            p2.toInt(),
+            p3.toInt(),
+            -Integer.MAX_VALUE,
+            Integer.MAX_VALUE,
+            -Integer.MAX_VALUE,
+            Integer.MAX_VALUE
+        )
+//        scroller!!.startScroll()
+        Log.e("ssssssssssss", "onFling==${p1.x}==${p0.x}--velocityX=${p2}---velocityy=${p3}")
         return true
     }
 
+    private var distanceX = Integer.MAX_VALUE
     override fun computeScroll() {
         super.computeScroll()
 //        scroller!!.startScroll()
         Log.e("ssssssssssss", "${scroller!!.computeScrollOffset()}")
         if (scroller!!.computeScrollOffset()) {
 //            scrollXDistance = (-scroller!!.currX).toFloat()
+            if (distanceX == Integer.MAX_VALUE) {
+                scrollXDistance = (scroller!!.currX - scroller!!.startX).toFloat()
+            } else {
+                scrollXDistance = (scroller!!.currX - distanceX).toFloat()
+
+            }
+            Log.e("computeScroll", "${scrollXDistance}")
+            Log.e("scroller!!.currX", "${scroller!!.currX}")
+            distanceX = scroller!!.currX
             invalidate()
+        } else {
+            distanceX = Integer.MAX_VALUE
         }
 //        if (scroller!!.computeScrollOffset()){
 //            scro
