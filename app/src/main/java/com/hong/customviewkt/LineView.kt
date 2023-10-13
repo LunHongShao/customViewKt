@@ -354,7 +354,7 @@ class LineView : View, GestureDetector.OnGestureListener {
 
     }
 
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
+    override fun onTouchEvent(event: MotionEvent): Boolean {
         return gesture!!.onTouchEvent(event)
         //注意处理左右拖动极限
     }
@@ -371,14 +371,14 @@ class LineView : View, GestureDetector.OnGestureListener {
         var id: Int
     )
 
-    override fun onDown(p0: MotionEvent?): Boolean {
+    override fun onDown(p0: MotionEvent): Boolean {
         return true
     }
 
-    override fun onShowPress(p0: MotionEvent?) {
+    override fun onShowPress(p0: MotionEvent) {
     }
 
-    override fun onSingleTapUp(p0: MotionEvent?): Boolean {
+    override fun onSingleTapUp(p0: MotionEvent): Boolean {
         return false
     }
 
