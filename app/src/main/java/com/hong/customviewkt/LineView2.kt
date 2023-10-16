@@ -367,17 +367,6 @@ class LineView2 : View, GestureDetector.OnGestureListener {
                 }
                 if (enableDrawData.isNotEmpty()) {
                     insertToLeft()
-//                    if (enableDrawData[enableDrawData.lastIndex].xPos - originalEndX >= 0) {
-//                        //往右滑动 滑动得距离达到了限度，调整可绘制集合
-//
-//                    } else {
-//                        Log.e("ssssssssss", "else分支")
-//                        //往左滑动
-//                        if (abs(originalEndX - enableDrawData[enableDrawData.lastIndex].xPos) >= perDataDistance * maxValuePoint) {
-//                            insertToRight()
-//                        }
-//                    }
-
                 }
             } else {
                 //右边界处理
@@ -539,30 +528,9 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         val res = gesture!!.onTouchEvent(event)
         Log.e("onTouchEvent", "onTouchEvent==${res}")
         return res
-//        when (event.action) {
-//            MotionEvent.ACTION_DOWN -> {
-//                return true
-//            }
-//            MotionEvent.ACTION_MOVE -> {
-//                scrollXDistance = event.x - lastX
-//                invalidate()
-//            }
-//        }
-//        lastX = event.x
-//        return true
-        //注意处理左右拖动极限
     }
 
 
-    /**
-     * 转换后的数据
-     */
-//    data class LindData(
-//        val time: Long,
-//        val value: Float,
-//        var xPos: Float = 0f,
-//        var yPos: Float = 0f
-//    )
 
     override fun onDown(p0: MotionEvent): Boolean {
         Log.e("OnGestureListener", "onDown")
@@ -614,7 +582,6 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             -Integer.MAX_VALUE,
             Integer.MAX_VALUE
         )
-//        scroller!!.startScroll()
         Log.e("ssssssssssss", "onFling==${p1.x}==${p0.x}--velocityX=${p2}---velocityy=${p3}")
         return true
     }
@@ -622,7 +589,6 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     private var distanceX = Integer.MAX_VALUE
     override fun computeScroll() {
         super.computeScroll()
-//        scroller!!.startScroll()
         Log.e("ssssssssssss", "${scroller!!.computeScrollOffset()}")
         if (scroller!!.computeScrollOffset()) {
 //            scrollXDistance = (-scroller!!.currX).toFloat()
@@ -639,9 +605,6 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         } else {
             distanceX = Integer.MAX_VALUE
         }
-//        if (scroller!!.computeScrollOffset()){
-//            scro
-//        }
     }
 
 }
