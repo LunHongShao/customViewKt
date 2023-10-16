@@ -3,9 +3,11 @@ package com.hong.customviewkt
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Shader
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
@@ -20,6 +22,7 @@ fun main() {
         println(index)
     }
 }
+
 class LineView2 : View, GestureDetector.OnGestureListener {
     private var gesture: GestureDetector? = null
     private var scroller: Scroller? = null
@@ -34,7 +37,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         attrs,
         defStyleAttr
     ) {
-        setBackgroundColor(Color.parseColor("#30000000"))
+//        setBackgroundColor(Color.parseColor("#30000000"))
         gesture = GestureDetector(ctx, this)
         scroller = Scroller(ctx)
     }
@@ -61,6 +64,9 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     private val lineWidth = 6
     private val xyValueTextSize = 30
 
+    //渐变
+    private var gradient: LinearGradient? = null
+
     //绘制数据区域可用宽度
     private var availableWidth = 0f
 
@@ -83,7 +89,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     private var scrollPosLimit = maxValuePoint * 2
 
     //y轴顶部最大有效值位置
-    private val yValueMaxLimitSpace = 30
+    private val yValueMaxLimitSpace = 60
     private val pointWidth = 9
 
     //x轴线以下位置高度
@@ -133,9 +139,11 @@ class LineView2 : View, GestureDetector.OnGestureListener {
     private var yTextPaint = Paint()
     private var testPaint = Paint()
     private var linePaint = Paint()
+    private var gradientPaint = Paint()
     private var pointValuePaint = Paint()
     private var linePointPaint = Paint()
     private var path = Path()
+    private var gradientPath = Path()
     private var clipRectF = RectF()
 
     //往左边加
@@ -277,6 +285,11 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             style = Paint.Style.STROKE
             strokeWidth = lineWidth.toFloat()
         }
+        gradientPaint.apply {
+            isAntiAlias = true
+            color = lineColor
+            style = Paint.Style.FILL
+        }
         pointValuePaint.apply {
             isAntiAlias = true
             color = Color.BLACK
@@ -293,10 +306,10 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         Log.e("开始绘制", "${scrollXDistance.toString()}--${totalScrollX}---${scrollX}")
         Log.e("sssssssssss", canvas.height.toString())
         canvas.save()
-//        第一次裁剪
+//        第一次裁剪 用来绘制点和线
         clipRectF.set(
             yValueRectTextWidth.toFloat() - pointWidth.shr(1),
-            yValueMaxLimitSpace.toFloat(),
+            0f,
             measuredWidth.toFloat(),
             measuredHeight - xyAvailablePos - xValueRectTextHeight.toFloat()
         )
@@ -309,7 +322,8 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 //        canvas.drawColor(Color.RED)
         if (perDataDistance == 0f) {
             //初始化状态
-            perDataDistance = clipRectF.width() / maxValuePoint
+            perDataDistance =
+                (clipRectF.width() - (maxValuePoint * pointWidth.shr(1))) / (maxValuePoint - 1)
             //填充可绘制数据
             if (data.size <= maxValuePoint * pointScale) {
                 enableDrawData.addAll(data)
@@ -321,8 +335,7 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             var xPos = clipRectF.left + pointWidth
             for (item in data) {
                 item.xPos = xPos
-                item.yPos =
-                    clipRectF.height() - item.value * yRate + clipRectF.top + yValueMaxLimitSpace
+                item.yPos = measuredHeight - xValueRectTextHeight - item.value * yRate
 //                item.yPos = clipRectF.top
                 xPos += perDataDistance
             }
@@ -394,7 +407,15 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         //开始画点
         drawAllPoint(canvas)
         //画点上的数据
-//        canvas.restore()
+        canvas.restore()
+//        第二次裁剪 绘制点上的值
+        clipRectF.set(
+            yValueRectTextWidth.toFloat() - pointWidth,
+            0f,
+            measuredWidth.toFloat(),
+            measuredHeight - xyAvailablePos - xValueRectTextHeight.toFloat()
+        )
+        canvas.clipRect(clipRectF)
         drawPointValue(canvas)
 
 
@@ -418,6 +439,9 @@ class LineView2 : View, GestureDetector.OnGestureListener {
      */
     private fun drawAllPoint(canvas: Canvas) {
         path.reset()
+        if (enableDrawData.isNotEmpty()) {
+            path.moveTo(enableDrawData[0].xPos, enableDrawData[0].yPos)
+        }
 //        if (enableDrawData.isNotEmpty()) {
 //            path.moveTo(enableDrawData[0].xPos, enableDrawData[0].yPos)
 //        }
@@ -425,7 +449,35 @@ class LineView2 : View, GestureDetector.OnGestureListener {
             canvas.drawCircle(item.xPos, item.yPos, pointWidth.toFloat(), linePointPaint)
             path.lineTo(item.xPos, item.yPos)
         }
+        if (gradient == null) {
+            gradient = LinearGradient(
+                0f,
+                0f,
+                0f,
+                measuredHeight.toFloat(),
+                intArrayOf(
+                    Color.parseColor("#5C7889DC"),
+                    Color.parseColor("#00FFFFFF")
+                ),
+                null,
+                Shader.TileMode.CLAMP
+            )
+        }
+        gradientPaint.shader = gradient
+        gradientPath.set(path)
+        if (enableDrawData.isNotEmpty()) {
+            gradientPath.lineTo(
+                enableDrawData[enableDrawData.lastIndex].xPos,
+                measuredHeight - xValueRectTextHeight.toFloat()
+            )
+            gradientPath.lineTo(
+                enableDrawData[0].xPos,
+                measuredHeight - xValueRectTextHeight.toFloat()
+            )
+            gradientPath.close()
+        }
         canvas.drawPath(path, linePaint)
+        canvas.drawPath(gradientPath, gradientPaint)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -492,15 +544,15 @@ class LineView2 : View, GestureDetector.OnGestureListener {
         //从y轴正方向往负方向画
         val font = yTextPaint.fontMetrics
         val dy = (font.bottom - font.top) / 2 - font.bottom
-        canvas.drawText("0", 0f, enableYHeight + dy + yValueMaxLimitSpace, yTextPaint)
+        canvas.drawText("0%", 0f, measuredHeight - xValueRectTextHeight + dy, yTextPaint)
         for (yValue in yValues) {
-            val realYPos = enableYHeight - yValue * yRate
+            val realYPos = measuredHeight - xValueRectTextHeight - yValue * yRate
 
             //注意，这里是以y轴值底部为重点开始画的，没有垂直剧中
             canvas.drawText(
                 "${yValue}%",
                 0f,
-                realYPos + dy + yValueMaxLimitSpace + (font.bottom - font.top) / 2,
+                realYPos + dy,
                 yTextPaint
             )
         }
@@ -521,15 +573,11 @@ class LineView2 : View, GestureDetector.OnGestureListener {
 
     }
 
-    //    private var offsetX = 0f
-    private var downX = 0f
-    private var lastX = 0f
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val res = gesture!!.onTouchEvent(event)
         Log.e("onTouchEvent", "onTouchEvent==${res}")
         return res
     }
-
 
 
     override fun onDown(p0: MotionEvent): Boolean {
