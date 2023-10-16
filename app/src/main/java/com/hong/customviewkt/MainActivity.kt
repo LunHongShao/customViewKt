@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         data.add(LineView.LindData(8, 75f,id=8))
         data.add(LineView.LindData(9, 62f,id=9))
         data.add(LineView.LindData(1692784194000, 77f,id=10))
-        for (i in 11 until 10000){
+        for (i in 11 until 500){
             data.add(LineView.LindData(i.toLong(), 77f,id=i))
         }
         lineView.data = data
